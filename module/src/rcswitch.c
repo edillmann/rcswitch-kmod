@@ -86,14 +86,21 @@ static ssize_t sysfs_command_store(struct kobject *kobj, struct kobj_attribute *
 {
     spin_lock(&send_lock);
 
+    if (en_gpio != -1) {
+            gpio_set_value(en_gpio, 1);
+    }
+
     send(buf);
 
+    if (en_gpio != -1) {
+            gpio_set_value(en_gpio, 0);
+    }
     spin_unlock(&send_lock);
 
     return count;
 }
 
-static struct kobj_attribute command_attribute = __ATTR(command, 0222, NULL, sysfs_command_store);
+static struct kobj_attribute command_attribute = __ATTR(command, 0220, NULL, sysfs_command_store);
 
 /* SYSFS: get power state: on (1)/off (0)/disabled (-1) */
 static ssize_t sysfs_power_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
@@ -124,7 +131,7 @@ static ssize_t sysfs_power_store(struct kobject *kobj, struct kobj_attribute *at
     return count;
 }
 
-static struct kobj_attribute power_attribute = __ATTR(power, 0666, sysfs_power_show ,sysfs_power_store);
+static struct kobj_attribute power_attribute = __ATTR(power, 0660, sysfs_power_show ,sysfs_power_store);
 
 /* SYSFS: List of all attributes exported to sysfs */
 static struct attribute *attrs[] = {
@@ -389,7 +396,7 @@ static int __init rcswitch_init(void)
     if(en_gpio != -1)
     {
         /* register EN-GPIO */
-        ret = gpio_request_one(en_gpio, GPIOF_OUT_INIT_HIGH, "rcswitch_en");
+        ret = gpio_request_one(en_gpio, GPIOF_OUT_INIT_LOW, "rcswitch_en");
 
         if(ret)
         {
